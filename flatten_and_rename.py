@@ -11,14 +11,21 @@ def flatten_and_rename(root: Path, dry_run: bool = False):
         print(f"Error: {root} is not a directory.", file=sys.stderr)
         sys.exit(1)
 
-    # Walk bottom‑up so we process deepest folders first
+    # Walk bottom‑up so we delete children before parents
     for dirpath, dirnames, filenames in os.walk(root, topdown=False):
         current_dir = Path(dirpath)
+
+        # Skip the root itself
         if current_dir == root:
-            continue  # skip the root itself
+            continue
+
+        # Skip any dir if its name—or any ancestor’s name—starts with '.'
+        rel = current_dir.relative_to(root)
+        if any(part.startswith('.') for part in rel.parts):
+            continue
 
         if not filenames:
-            # no files → delete if empty
+            # no files → try deleting if empty
             print(f"Removing empty folder: {current_dir}")
             if not dry_run:
                 try:
@@ -35,25 +42,23 @@ def flatten_and_rename(root: Path, dry_run: bool = False):
             ext = Path(fname).suffix
             ext_groups[ext].append(fname)
 
-        # for each extension group, decide whether to suffix
+        # move & rename per-extension
         for ext, fnames in ext_groups.items():
             if len(fnames) == 1:
                 # unique extension → no suffix
-                old_path = current_dir / fnames[0]
-                new_name = f"{parent_name}{ext}"
-                dest = root / new_name
-                print(f"Moving: {old_path} → {dest}")
+                old = current_dir / fnames[0]
+                new = root / f"{parent_name}{ext}"
+                print(f"Moving: {old} → {new}")
                 if not dry_run:
-                    shutil.move(str(old_path), str(dest))
+                    shutil.move(str(old), str(new))
             else:
                 # multiple files with same ext → add _1, _2, …
                 for idx, fname in enumerate(fnames, start=1):
-                    old_path = current_dir / fname
-                    new_name = f"{parent_name}_{idx}{ext}"
-                    dest = root / new_name
-                    print(f"Moving: {old_path} → {dest}")
+                    old = current_dir / fname
+                    new = root / f"{parent_name}_{idx}{ext}"
+                    print(f"Moving: {old} → {new}")
                     if not dry_run:
-                        shutil.move(str(old_path), str(dest))
+                        shutil.move(str(old), str(new))
 
         # now delete the (hopefully empty) folder
         print(f"Removing folder: {current_dir}")
@@ -66,8 +71,11 @@ def flatten_and_rename(root: Path, dry_run: bool = False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Flatten subfolders: move & rename each file into the root, then delete the subfolders. "
-                    "Suffixes (_1, _2) are only used when multiple files share the same extension."
+        description=(
+            "Flatten subfolders: move & rename each file into the root, then delete "
+            "the subfolders. Skip any folder (and its contents) if its own name—or "
+            "any ancestor’s—starts with '.'."
+        )
     )
     parser.add_argument(
         "root",
