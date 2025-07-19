@@ -4,37 +4,28 @@
 #         self.val = val
 #         self.next = next
 class Solution:
-    def addTwoNumbers(self, l1: ListNode, l2: ListNode) -> ListNode:
+    def addTwoNumbers(self, l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
+        l3_l = []
         
-        s_init = ListNode()
-        sum = s_init
-        c=0
-        
-        while l1 is not None or l2 is not None or c>0:
-            # sum.next = ListNode()
-            s, c= self.addUtil(l1, l2, c)
-            
-            # sum.val = s
-            sum.next = ListNode(val=s)
-            
-            sum = sum.next
+        c = 0
+        while l1 or l2:
+            s = c
             if l1:
+                s += l1.val
                 l1 = l1.next
             if l2:
+                s += l2.val
                 l2 = l2.next
-        return s_init.next
-        # return addUtil(l1, l2, ListNode())
-    
-    def addUtil(self, l1: ListNode, l2: ListNode, c=0): # l3: ListNode,
-        # if l1 is None and l2 is None:
-            # return l3
-        v1 = 0 if l1 is None else l1.val
-        v2 = 0 if l2 is None else l2.val
-        s=(v1+v2+c)%10
-        c=(v1+v2+c)//10
-        return s, c
-        # l3.next = ListNode(val=s)
-        
-        # return self.addUtil(l1.next, l2.next, l3.next, c)
-        
+            c = s//10
+            s = s%10
+            l3_l.append(s)
+
+        if c>0:
+            l3_l.append(c)
+
+        p = l3 = ListNode(val=l3_l[0])
+        for x in l3_l[1:]:
+            p.next = ListNode(val=x)
+            p = p.next
+        return l3
         
