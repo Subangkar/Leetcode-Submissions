@@ -6,3 +6,7 @@ Thanks to [leetcode-export](https://github.com/NeverMendel/leetcode-export) for 
 ```bash
 leetcode-export --no-problem-statement --only-accepted --only-last-submission
 ```
+Then to rename files:
+```bash
+python flatten_and_rename.py ./
+```
