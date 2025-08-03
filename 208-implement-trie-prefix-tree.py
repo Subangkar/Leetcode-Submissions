@@ -26,7 +26,7 @@ class Trie:
 
         for char in word:
             if char not in node.children:
-                print(char, node.children)
+                # print(char, node.children)
                 return False
             else:
                 node = node.children[char]
